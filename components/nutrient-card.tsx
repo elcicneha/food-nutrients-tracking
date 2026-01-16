@@ -7,7 +7,7 @@ interface NutrientCardProps {
   current: number
   target: number
   unit: string
-  icon: string
+  icon?: string
 }
 
 export function NutrientCard({ name, current, target, unit, icon }: NutrientCardProps) {
@@ -27,7 +27,7 @@ export function NutrientCard({ name, current, target, unit, icon }: NutrientCard
         {/* Header with icon and name */}
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-xl">{icon}</span>
+            {icon && <span className="text-xl">{icon}</span>}
             <div>
               <h3 className="font-semibold text-foreground text-sm leading-tight">{name}</h3>
             </div>

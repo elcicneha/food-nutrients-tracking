@@ -1,0 +1,21 @@
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+// Types for database tables
+export type Food = {
+  code: string        // Primary key
+  name: string
+  [key: string]: any  // Allow dynamic nutrient code columns (retol, thia, etc.)
+}
+
+export type Nutrient = {
+  code: string                    // Primary key
+  nutrient_name: string | null    // Display name
+  value_type: string | null       // Type classification
+  rda_value: number | null        // Target RDA
+  unit: string | null             // Measurement unit
+}
