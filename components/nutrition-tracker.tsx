@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { X } from "lucide-react"
 import { Input } from "@/components/ui/input"
-import { Card } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { NutrientCard } from "./nutrient-card"
 import { FoodSearch } from "./food-search"
 import { supabase } from "@/lib/supabase"
@@ -125,7 +125,8 @@ export function NutritionTracker() {
               <label className="text-sm font-semibold text-foreground/70 mb-3 block">
                 Selected Foods ({selectedFoods.length})
               </label>
-              <Card className="p-4 bg-card border-border min-h-80 space-y-2">
+              <Card className="bg-card border-border min-h-80">
+              <CardContent className="space-y-3">
                 {selectedFoods.length === 0 ? (
                   <p className="text-muted-foreground text-sm text-center py-8">No foods selected yet</p>
                 ) : (
@@ -155,6 +156,7 @@ export function NutritionTracker() {
                     </div>
                   ))
                 )}
+                </CardContent>
               </Card>
             </div>
           </div>
