@@ -7,10 +7,16 @@ type FoodWithQuantity = {
 
 /**
  * Calculate total nutrient values from selected foods
+ * Applies unit conversion if conversionMap is provided
+ *
+ * @param selectedFoods - Array of foods with quantities
+ * @param nutrients - Array of nutrient definitions from rda_values
+ * @param conversionMap - Optional map of nutrient code to conversion factor
  */
 export function calculateNutrientTotals(
   selectedFoods: FoodWithQuantity[],
-  nutrients: Nutrient[]
+  nutrients: Nutrient[],
+  conversionMap: Record<string, number> = {}
 ): Record<string, number> {
   const totals: Record<string, number> = {}
 
@@ -25,7 +31,13 @@ export function calculateNutrientTotals(
       const code = nutrient.code
       const value = food[code]
       if (value !== undefined && value !== null && typeof value === "number") {
-        const proportionalValue = (value * food.quantity) / 100
+        // Calculate proportional value (per 100g basis)
+        let proportionalValue = (value * food.quantity) / 100
+
+        // Apply unit conversion if available
+        const conversionFactor = conversionMap[code] ?? 1
+        proportionalValue *= conversionFactor
+
         totals[code] = (totals[code] || 0) + proportionalValue
       }
     })

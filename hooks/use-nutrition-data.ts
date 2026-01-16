@@ -1,12 +1,14 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { supabase } from "@/lib/supabase"
-import type { Food, Nutrient } from "@/lib/supabase"
+import type { Food, Nutrient, NutrientMetadata } from "@/lib/supabase"
+import { buildConversionMap } from "@/lib/unit-conversion"
 
 type UseNutritionDataResult = {
   foods: Food[]
   nutrients: Nutrient[]
+  conversionMap: Record<string, number>
   loading: boolean
   error: string | null
 }
@@ -14,22 +16,33 @@ type UseNutritionDataResult = {
 export function useNutritionData(): UseNutritionDataResult {
   const [foods, setFoods] = useState<Food[]>([])
   const [nutrients, setNutrients] = useState<Nutrient[]>([])
+  const [nutrientMetadata, setNutrientMetadata] = useState<NutrientMetadata[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchData() {
       try {
-        // First, fetch all nutrients from rda_values
-        const { data: nutrientsData, error: nutrientsError } = await supabase
-          .from("rda_values")
-          .select("code, nutrient_name, value_type, rda_value, unit")
-          .order("nutrient_name")
+        // Fetch rda_values and nutrient_metadata in parallel
+        const [nutrientsResult, metadataResult] = await Promise.all([
+          supabase
+            .from("rda_values")
+            .select("code, nutrient_name, value_type, rda_value, unit")
+            .order("nutrient_name"),
+          supabase
+            .from("nutrient_metadata")
+            .select("id, category, code, name, unit"),
+        ])
 
-        if (nutrientsError) throw nutrientsError
+        if (nutrientsResult.error) throw nutrientsResult.error
+        if (metadataResult.error) throw metadataResult.error
+
+        const nutrientsData = nutrientsResult.data
+        const metadataData = metadataResult.data
 
         // Build column list: code, name, plus all nutrient codes
-        const nutrientColumns = nutrientsData?.map((n) => n.code).join(", ") || ""
+        const nutrientColumns =
+          nutrientsData?.map((n) => n.code).join(", ") || ""
         const selectColumns = `code, name${nutrientColumns ? ", " + nutrientColumns : ""}`
 
         // Fetch foods with only the columns we need
@@ -41,9 +54,15 @@ export function useNutritionData(): UseNutritionDataResult {
 
         setFoods((foodsData as unknown as Food[]) || [])
         setNutrients(nutrientsData || [])
+        setNutrientMetadata((metadataData as NutrientMetadata[]) || [])
       } catch (err: unknown) {
-        const supabaseError = err as { message?: string; code?: string; details?: string }
-        const errorMessage = supabaseError.message || supabaseError.code || JSON.stringify(err)
+        const supabaseError = err as {
+          message?: string
+          code?: string
+          details?: string
+        }
+        const errorMessage =
+          supabaseError.message || supabaseError.code || JSON.stringify(err)
         console.error("Error fetching data:", errorMessage)
         setError(errorMessage)
       } finally {
@@ -54,5 +73,18 @@ export function useNutritionData(): UseNutritionDataResult {
     fetchData()
   }, [])
 
-  return { foods, nutrients, loading, error }
+  // Compute conversion map once when data loads
+  const conversionMap = useMemo(() => {
+    if (nutrientMetadata.length === 0 || nutrients.length === 0) {
+      return {}
+    }
+    // Filter to only include metadata with valid code and unit
+    const validMetadata = nutrientMetadata.filter(
+      (m): m is NutrientMetadata & { code: string; unit: string } =>
+        m.code !== null && m.unit !== null
+    )
+    return buildConversionMap(validMetadata, nutrients)
+  }, [nutrientMetadata, nutrients])
+
+  return { foods, nutrients, conversionMap, loading, error }
 }

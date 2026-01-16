@@ -19,3 +19,11 @@ export type Nutrient = {
   rda_value: number | null        // Target RDA
   unit: string | null             // Measurement unit
 }
+
+export type NutrientMetadata = {
+  id: number
+  category: string | null
+  code: string
+  name: string | null
+  unit: string | null
+}
