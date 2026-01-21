@@ -1,14 +1,11 @@
 "use client"
 
-import { useState, useMemo, useRef, useEffect } from "react"
-import { X, Minus, Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { useState, useMemo } from "react"
 import { NutrientCard } from "./nutrient-card"
 import { FoodSearch } from "./food-search"
+import { SelectedFoodsList } from "./selected-foods-list"
 import { useNutritionData } from "@/hooks/use-nutrition-data"
 import { calculateNutrientTotals, getEffectiveRda } from "@/lib/nutrition-utils"
-import { cn } from "@/lib/utils"
 
 import type { Food } from "@/lib/supabase"
 
@@ -21,6 +18,7 @@ export function NutritionTracker() {
   const [selectedFoods, setSelectedFoods] = useState<SelectedFood[]>([])
   const { foods, nutrients, conversionMap, categoryMap, loading } = useNutritionData()
 
+  // Food list handlers
   const addFood = (food: Food) => {
     setSelectedFoods([...selectedFoods, { ...food, quantity: 100 }])
   }
@@ -29,102 +27,30 @@ export function NutritionTracker() {
     setSelectedFoods(selectedFoods.filter((f) => f.code !== code))
   }
 
-  const foodItemRefs = useRef<(HTMLDivElement | null)[]>([])
-  const listRef = useRef<HTMLDivElement>(null)
-  const [showTopFade, setShowTopFade] = useState(false)
-  const [showBottomFade, setShowBottomFade] = useState(false)
-
-  // Scroll detection for bidirectional fade masks
-  useEffect(() => {
-    const el = listRef.current
-    if (!el) return
-
-    const checkScroll = () => {
-      const hasOverflow = el.scrollHeight > el.clientHeight
-      const isAtTop = el.scrollTop <= 1
-      const isAtBottom = el.scrollHeight - el.scrollTop <= el.clientHeight + 1
-
-      setShowTopFade(hasOverflow && !isAtTop)
-      setShowBottomFade(hasOverflow && !isAtBottom)
-    }
-
-    checkScroll()
-    el.addEventListener('scroll', checkScroll)
-    window.addEventListener('resize', checkScroll)
-
-    return () => {
-      el.removeEventListener('scroll', checkScroll)
-      window.removeEventListener('resize', checkScroll)
-    }
-  }, [selectedFoods])
-
-  // Compute fade class based on scroll state
-  const fadeClass = showTopFade && showBottomFade
-    ? "scroll-fade-both"
-    : showTopFade
-      ? "scroll-fade-top"
-      : showBottomFade
-        ? "scroll-fade-bottom"
-        : ""
-
-  const handleFoodKeyDown = (
-    e: React.KeyboardEvent<HTMLDivElement>,
-    index: number,
-    foodCode: string
-  ) => {
-    // Only handle Delete/Backspace if not focused on an input
-    if (e.target instanceof HTMLInputElement) return
-
-    switch (e.key) {
-      case 'Delete':
-      case 'Backspace':
-        e.preventDefault()
-        removeFood(foodCode)
-        // Move focus to next item or previous if last
-        const nextIndex = index < selectedFoods.length - 1 ? index : index - 1
-        setTimeout(() => {
-          if (nextIndex >= 0) {
-            foodItemRefs.current[nextIndex]?.focus()
-          }
-        }, 0)
-        break
-      case 'ArrowDown':
-        e.preventDefault()
-        if (index < selectedFoods.length - 1) {
-          foodItemRefs.current[index + 1]?.focus()
-        }
-        break
-      case 'ArrowUp':
-        e.preventDefault()
-        if (index > 0) {
-          foodItemRefs.current[index - 1]?.focus()
-        }
-        break
-    }
-  }
-
   const updateQuantity = (code: string, quantity: number) => {
-    setSelectedFoods(selectedFoods.map((f) => (f.code === code ? { ...f, quantity: Math.max(0, quantity) } : f)))
+    setSelectedFoods(selectedFoods.map((f) =>
+      f.code === code ? { ...f, quantity: Math.max(0, quantity) } : f
+    ))
   }
 
+  // Nutrient calculations
   const totalNutrients = useMemo(
     () => calculateNutrientTotals(selectedFoods, nutrients, conversionMap, categoryMap),
     [selectedFoods, nutrients, conversionMap, categoryMap]
   )
 
-  // Filter nutrients to only show those with valid RDA values
   const validNutrients = useMemo(
     () => nutrients.filter((n) => n.rda_value !== null && n.rda_value > 0),
     [nutrients]
   )
 
-  // Calculate summary stats
   const completedNutrients = validNutrients.filter((nutrient) => {
     const current = totalNutrients[nutrient.code] || 0
     const target = getEffectiveRda(nutrient, USER_WEIGHT_KG)
     return (current / target) >= 0.9
   }).length
 
+  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-background p-4 sm:p-8 flex items-center justify-center">
@@ -160,105 +86,15 @@ export function NutritionTracker() {
               onSelectFood={addFood}
             />
 
-            {/* Selected Foods List - grows to fill */}
-            <div className="flex-1 flex flex-col min-h-0 gap-3">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-foreground/70">
-                  Selected Foods
-                </label>
-                <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                  {selectedFoods.length} items
-                </span>
-              </div>
-              <Card className="bg-card border-border flex-1 flex flex-col min-h-0 py-0">
-                <CardContent
-                  ref={listRef}
-                  className={cn(
-                    "flex-1 overflow-y-auto px-4",
-                    fadeClass
-                  )}
-                >
-                  <div className="py-4 space-y-2">
-                    {selectedFoods.length === 0 ? (
-                      // Empty state
-                      <div className="text-center py-8 space-y-2">
-                        <div className="text-3xl">🥗</div>
-                        <div>
-                          <p className="text-muted-foreground text-sm mb-[2px]">No foods selected yet</p>
-                          <p className="text-muted-foreground/60 text-xs">Search above to add foods</p>
-                        </div>
-                      </div>
-                    ) : (
-                      selectedFoods.map((food, index) => (
-                        <div
-                          key={food.code}
-                          ref={(el) => { foodItemRefs.current[index] = el }}
-                          tabIndex={0}
-                          onKeyDown={(e) => handleFoodKeyDown(e, index, food.code)}
-                          className="flex items-center justify-between gap-3 bg-background rounded-lg p-3 hover:bg-muted/50 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-ring animate-fade-in-up group"
-                          style={{ animationDelay: `${index * 50}ms` }}
-                        >
-                          <span className="text-foreground text-sm font-medium flex-1 min-w-0 truncate">{food.name}</span>
-                          {/* Unified quantity stepper pill */}
-                          <div className="flex items-center bg-muted/60 rounded-full border border-border/50 overflow-hidden transition-all duration-150 hover:border-border hover:bg-muted/80 focus-within:ring-2 focus-within:ring-ring/30">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon-sm"
-                              onClick={() => updateQuantity(food.code, food.quantity - 10)}
-                              aria-label="Decrease quantity by 10g"
-                              disabled={food.quantity <= 0}
-                              className="h-7 w-7 rounded-none cursor-pointer"
-                            >
-                              <Minus className="w-3 h-3" />
-                            </Button>
-                            <div className="flex items-center border-x border-border/30">
-                              <input
-                                type="number"
-                                value={food.quantity}
-                                onChange={(e) => updateQuantity(food.code, Number.parseInt(e.target.value) || 0)}
-                                onFocus={(e) => e.target.select()}
-                                className="w-10 h-7 text-sm text-center bg-transparent border-none outline-none font-medium text-foreground tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                min="0"
-                              />
-                              <span className="text-muted-foreground text-xs pr-1.5">g</span>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon-sm"
-                              onClick={() => updateQuantity(food.code, food.quantity + 10)}
-                              aria-label="Increase quantity by 10g"
-                              className="h-7 w-7 rounded-none cursor-pointer"
-                            >
-                              <Plus className="w-3 h-3" />
-                            </Button>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            onClick={() => removeFood(food.code)}
-                            aria-label={`Remove ${food.name}`}
-                            className="opacity-50 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive"
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-              {/* Total summary */}
-              {selectedFoods.length > 0 && (
-                <p className="text-xs text-muted-foreground text-right">
-                  Total: {selectedFoods.reduce((sum, f) => sum + f.quantity, 0)}g
-                </p>
-              )}
-            </div>
+            {/* Selected Foods List */}
+            <SelectedFoodsList
+              foods={selectedFoods}
+              onUpdateQuantity={updateQuantity}
+              onRemoveFood={removeFood}
+            />
           </div>
 
-          {/* RIGHT COLUMN - Responsive Card Grid */}
+          {/* RIGHT COLUMN - Nutrient Cards Grid */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-sm font-medium text-foreground/70">Daily Nutrients</label>
