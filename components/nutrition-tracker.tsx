@@ -97,9 +97,9 @@ export function NutritionTracker() {
         </header>
 
         {/* Responsive Layout: stacked on mobile, two-column on md+ */}
-        <div className="grid grid-cols-1 md:grid-cols-[minmax(320px,1fr)_1fr] lg:grid-cols-[minmax(340px,1fr)_2fr] gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-[minmax(280px,1fr)_1fr] lg:grid-cols-[minmax(340px,1fr)_2fr] gap-6 md:gap-8">
           {/* LEFT COLUMN - Sticky on desktop */}
-          <div className="flex flex-col gap-6 md:sticky md:top-8 md:self-start md:max-h-[calc(100vh-4rem)] sticky-sidebar">
+          <div className="flex flex-col gap-4 sm:gap-6 md:sticky md:top-8 md:self-start md:max-h-[calc(100vh-4rem)] sticky-sidebar">
             {/* Search Bar */}
             <FoodSearch
               foods={foods}
@@ -130,13 +130,7 @@ export function NutritionTracker() {
               {groupedNutrients.map(({ category, nutrients: groupNutrients }) => (
                 <section key={category}>
                   <h2 className="text-sm font-medium font-sans text-muted-foreground mb-3">{category}</h2>
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                      gap: "0.875rem",
-                    }}
-                  >
+                  <div className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3">
                     {groupNutrients.map((nutrient, index) => (
                       <div
                         key={nutrient.code}

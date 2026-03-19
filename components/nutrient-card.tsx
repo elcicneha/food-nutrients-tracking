@@ -26,12 +26,12 @@ export function NutrientCard({ name, current, target, unit, icon }: NutrientCard
 
   return (
     <Card className={cn(
-      "p-5 bg-card border-border",
+      "p-3.5 sm:p-5 bg-card border-border",
       "hover:shadow-lg hover:-translate-y-0.5",
       "transition-all duration-200 ease-out",
       isComplete && "ring-1 ring-[var(--progress-high)]/20"
     )}>
-      <div className="space-y-3">
+      <div className="space-y-2 sm:space-y-3">
         {/* Header with icon and name */}
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">

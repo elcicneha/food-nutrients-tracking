@@ -80,7 +80,7 @@ export function FoodSearch({ foods, selectedFoodCodes, onSelectFood }: FoodSearc
   return (
     <div className="relative" ref={containerRef}>
       <label className="text-sm font-medium text-foreground/70 mb-2 block">Add Foods</label>
-      <Command className="rounded-xl border border-border bg-card overflow-visible shadow-sm [&_[data-slot=command-input-wrapper]]:border-b-0" shouldFilter={false}>
+      <Command className="rounded-xl border border-border bg-card overflow-visible shadow-sm h-auto [&_[data-slot=command-input-wrapper]]:border-b-0" shouldFilter={false}>
         <CommandInput
           ref={inputRef}
           placeholder="Search for foods..."
@@ -118,8 +118,8 @@ export function FoodSearch({ foods, selectedFoodCodes, onSelectFood }: FoodSearc
           </CommandList>
         )}
       </Command>
-      {/* Keyboard hints */}
-      <p className="text-xs text-muted-foreground/60 mt-2">
+      {/* Keyboard hints - hidden on mobile where they're not useful */}
+      <p className="hidden sm:block text-xs text-muted-foreground/60 mt-2">
         ↑↓ navigate • ↵ select • esc close
       </p>
     </div>

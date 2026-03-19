@@ -118,7 +118,7 @@ export function SelectedFoodsList({
                     ref={itemProps.ref as React.Ref<HTMLDivElement>}
                     tabIndex={itemProps.tabIndex}
                     onKeyDown={itemProps.onKeyDown}
-                    className="flex items-center justify-between gap-3 bg-background rounded-lg p-3 hover:bg-muted/50 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring animate-fade-in-up group"
+                    className="flex items-center justify-between gap-2 sm:gap-3 bg-background rounded-lg p-2.5 sm:p-3 hover:bg-muted/50 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring animate-fade-in-up group"
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
                     <span className="text-foreground text-sm font-medium flex-1 min-w-0 truncate">{food.name}</span>
@@ -143,7 +143,7 @@ export function SelectedFoodsList({
                           onChange={(e) => onUpdateQuantity(food.code, Number.parseInt(e.target.value) || 0)}
                           onFocus={(e) => e.target.select()}
                           tabIndex={index === activeIndex ? 0 : -1}
-                          className="w-10 h-7 text-sm text-center bg-transparent border-none outline-none font-medium text-foreground tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          className="w-8 sm:w-10 h-7 text-xs sm:text-sm text-center bg-transparent border-none outline-none font-medium text-foreground tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           min="0"
                         />
                         <span className="text-muted-foreground text-xs pr-1.5">g</span>
