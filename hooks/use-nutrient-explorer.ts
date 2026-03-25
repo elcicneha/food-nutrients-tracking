@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useEffect } from "react"
 import type { Food, NutrientMetadata, Nutrient } from "@/lib/types"
 import { buildNutrientDisplayMap, type NutrientDisplayInfo } from "@/lib/nutrient-explorer-utils"
 
@@ -37,11 +37,24 @@ export function useNutrientExplorer({
   const [selectedNutrientCode, setSelectedNutrientCode] = useState<string>(
     initialNutrientCode || "enerc"
   )
-  const [additionalColumns, setAdditionalColumns] = useState<string[]>([])
+  const [additionalColumns, setAdditionalColumns] = useState<string[]>(() => {
+    try {
+      const stored = sessionStorage.getItem("explore-columns")
+      return stored ? JSON.parse(stored) : []
+    } catch {
+      return []
+    }
+  })
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     column: initialNutrientCode || "enerc",
     direction: "desc",
   })
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem("explore-columns", JSON.stringify(additionalColumns))
+    } catch { /* quota errors */ }
+  }, [additionalColumns])
 
   const displayMap = useMemo(
     () => buildNutrientDisplayMap(nutrientMetadata, nutrients),
@@ -102,7 +115,8 @@ export function useNutrientExplorer({
 
   const selectNutrient = useCallback((code: string) => {
     setSelectedNutrientCode(code)
-    setAdditionalColumns([])
+    // Remove the new primary from additional columns (avoid duplicate), but keep the rest
+    setAdditionalColumns((prev) => prev.filter((c) => c !== code))
     setSortConfig({ column: code, direction: "desc" })
   }, [])
 
