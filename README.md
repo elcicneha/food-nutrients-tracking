@@ -15,9 +15,8 @@ Most nutrition tools focus on macros - calories, protein, carbs, fat. I built th
 ## Tech stack
 
 - **Next.js 16**
-- **Supabase** 
-- **Tailwind CSS v4** 
-- **shadcn/ui** 
+- **Tailwind CSS v4**
+- **shadcn/ui**
 
 ## Data sources
 
