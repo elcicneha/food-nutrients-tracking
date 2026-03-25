@@ -7,14 +7,19 @@ import type { Food, Nutrient, NutrientMetadata } from "@/lib/types"
 import type { DataSource, NutritionData } from "./data-source"
 
 class JsonDataSource implements DataSource {
+  private cache: NutritionData | null = null
+
   async fetchNutritionData(): Promise<NutritionData> {
+    if (this.cache) return this.cache
+
     const [foods, nutrients, nutrientMetadata] = await Promise.all([
       fetch("/data/foods-core.json").then((r) => r.json()) as Promise<Food[]>,
       fetch("/data/rda-values.json").then((r) => r.json()) as Promise<Nutrient[]>,
       fetch("/data/nutrient-metadata.json").then((r) => r.json()) as Promise<NutrientMetadata[]>,
     ])
 
-    return { foods, nutrients, nutrientMetadata }
+    this.cache = { foods, nutrients, nutrientMetadata }
+    return this.cache
   }
 }
 

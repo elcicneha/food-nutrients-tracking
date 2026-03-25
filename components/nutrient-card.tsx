@@ -1,8 +1,6 @@
-"use client"
-
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
-import { useRouter } from "next/navigation"
+import Link from "next/link"
 
 interface NutrientCardProps {
   code: string
@@ -14,7 +12,6 @@ interface NutrientCardProps {
 }
 
 export function NutrientCard({ code, name, current, target, unit, icon }: NutrientCardProps) {
-  const router = useRouter()
   const percentage = Math.round((current / target) * 100)
   const clampedPercentage = Math.min(percentage, 100)
   const isComplete = percentage >= 90
@@ -39,14 +36,12 @@ export function NutrientCard({ code, name, current, target, unit, icon }: Nutrie
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             {icon && <span className="text-xl flex-shrink-0">{icon}</span>}
-            <button
-              onClick={() => {
-                router.push(`/explore?nutrient=${code}`)
-              }}
+            <Link
+              href={`/explore?nutrient=${code}`}
               className="font-medium text-foreground text-sm leading-tight truncate hover:underline hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
             >
               {name}
-            </button>
+            </Link>
           </div>
           <span className={cn(
             "text-lg font-bold tabular-nums flex-shrink-0",

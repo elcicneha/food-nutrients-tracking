@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { NutrientCard } from "./nutrient-card"
 import { FoodSearch } from "./food-search"
 import { SelectedFoodsList } from "./selected-foods-list"
@@ -10,25 +10,55 @@ import { calculateNutrientTotals, getEffectiveRda } from "@/lib/nutrition-utils"
 import type { Food } from "@/lib/types"
 
 type SelectedFood = Food & { quantity: number }
+type StoredFood = { code: string; name: string; quantity: number }
+
+const STORAGE_KEY = "selected-foods"
 
 // Default user weight for per_kg RDA calculations (will be user-configurable later)
 const USER_WEIGHT_KG = 50
 
+function readStoredFoods(): StoredFood[] {
+  try {
+    const stored = sessionStorage.getItem(STORAGE_KEY)
+    const parsed = stored ? JSON.parse(stored) : []
+    // Validate stored data has required fields
+    return parsed.filter((f: any) => f.code && f.name)
+  } catch {
+    return []
+  }
+}
+
 export function NutritionTracker() {
-  const [selectedFoods, setSelectedFoods] = useState<SelectedFood[]>([])
+  const [selections, setSelections] = useState<StoredFood[]>(readStoredFoods)
   const { foods, nutrients, conversionMap, categoryMap, loading } = useNutritionData()
+
+  // Merge stored selections with full food data for nutrient calculations
+  const selectedFoods = useMemo(() => {
+    if (foods.length === 0) return selections as SelectedFood[]
+    const foodMap = new Map(foods.map((f) => [f.code, f]))
+    return selections.map((s) => {
+      const full = foodMap.get(s.code)
+      return full ? { ...full, quantity: s.quantity } : { ...s, quantity: s.quantity } as SelectedFood
+    })
+  }, [selections, foods])
+
+  // Persist slim data to sessionStorage
+  useEffect(() => {
+    const toStore: StoredFood[] = selections.map((f) => ({ code: f.code, name: f.name, quantity: f.quantity }))
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(toStore))
+  }, [selections])
 
   // Food list handlers
   const addFood = (food: Food) => {
-    setSelectedFoods([...selectedFoods, { ...food, quantity: 100 }])
+    setSelections([...selections, { code: food.code, name: food.name, quantity: 100 }])
   }
 
   const removeFood = (code: string) => {
-    setSelectedFoods(selectedFoods.filter((f) => f.code !== code))
+    setSelections(selections.filter((f) => f.code !== code))
   }
 
   const updateQuantity = (code: string, quantity: number) => {
-    setSelectedFoods(selectedFoods.map((f) =>
+    setSelections(selections.map((f) =>
       f.code === code ? { ...f, quantity: Math.max(0, quantity) } : f
     ))
   }
