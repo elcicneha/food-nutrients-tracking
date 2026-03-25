@@ -9,7 +9,7 @@ import type { DataSource, NutritionData } from "./data-source"
 class JsonDataSource implements DataSource {
   async fetchNutritionData(): Promise<NutritionData> {
     const [foods, nutrients, nutrientMetadata] = await Promise.all([
-      fetch("/data/foods.json").then((r) => r.json()) as Promise<Food[]>,
+      fetch("/data/foods-core.json").then((r) => r.json()) as Promise<Food[]>,
       fetch("/data/rda-values.json").then((r) => r.json()) as Promise<Nutrient[]>,
       fetch("/data/nutrient-metadata.json").then((r) => r.json()) as Promise<NutrientMetadata[]>,
     ])
