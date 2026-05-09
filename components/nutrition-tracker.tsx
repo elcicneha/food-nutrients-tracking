@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react"
 import { NutrientCard } from "./nutrient-card"
 import { FoodSearch } from "./food-search"
 import { SelectedFoodsList } from "./selected-foods-list"
+import { GithubButton } from "./github-button"
 import { useNutritionData } from "@/hooks/use-nutrition-data"
 import { calculateNutrientTotals, getEffectiveRda } from "@/lib/nutrition-utils"
 
@@ -117,13 +118,16 @@ export function NutritionTracker() {
     <div className="min-h-screen bg-background p-4 sm:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Page Header */}
-        <header className="space-y-1">
-          <h1 className="text-2xl sm:text-3xl font-normal text-foreground tracking-tight">
-            Daily Nutrition
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Track your nutrients, one meal at a time
-          </p>
+        <header className="flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            <h1 className="text-2xl sm:text-3xl font-normal text-foreground tracking-tight">
+              Daily Nutrition
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              Track your nutrients, one meal at a time
+            </p>
+          </div>
+          <GithubButton />
         </header>
 
         {/* Responsive Layout: stacked on mobile, two-column on md+ */}
