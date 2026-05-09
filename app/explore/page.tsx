@@ -1,13 +1,32 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { Suspense, useState, useEffect, useCallback } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { useNutrientExplorer } from "@/hooks/use-nutrient-explorer"
 import { NutrientExplorerSidebar } from "@/components/nutrient-explorer-sidebar"
 import { NutrientExplorerTable } from "@/components/nutrient-explorer-table"
 import type { Food, Nutrient, NutrientMetadata } from "@/lib/types"
 
+function LoadingState() {
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="text-center space-y-3">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+        <p className="text-muted-foreground">Loading nutrition data...</p>
+      </div>
+    </div>
+  )
+}
+
 export default function ExplorePage() {
+  return (
+    <Suspense fallback={<LoadingState />}>
+      <ExplorePageContent />
+    </Suspense>
+  )
+}
+
+function ExplorePageContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const nutrientParam = searchParams.get("nutrient")
@@ -59,14 +78,7 @@ export default function ExplorePage() {
   }, [selectNutrientInternal, router])
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-3">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-muted-foreground">Loading nutrition data...</p>
-        </div>
-      </div>
-    )
+    return <LoadingState />
   }
 
   return (
